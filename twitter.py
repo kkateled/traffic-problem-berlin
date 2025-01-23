@@ -1,7 +1,6 @@
 import tweepy
 import os
 import json
-from googletrans import Translator
 
 
 bearer_token = os.getenv('BEARER_TOKEN')
@@ -17,11 +16,3 @@ def get_latest_tweets(username):
         json_to_string = json.dumps(tweet.text)
         tweets.append(json_to_string)
     return tweets
-
-
-def translate(tweets):
-    result = []
-    for tweet in tweets:
-        text_new = Translator().translate(tweet, dest="en")
-        result.append(text_new)
-    return result
