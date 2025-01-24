@@ -29,11 +29,10 @@ def open_links(links):
     news = []
     for link in links:
         soup = create_soup(link)
-        news_text = soup.find('div', class_='content content_richtext').text
+        news_text = soup.find('div', class_='blog-entry').text
         news.append(news_text)
     return news
 
 
 def get_latest_news():
     return open_links(get_links_from_main_page())
-
