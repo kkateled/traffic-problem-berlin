@@ -1,6 +1,5 @@
 import tweepy
 import os
-import json
 import logging
 
 logging.basicConfig(
@@ -20,8 +19,7 @@ def get_latest_tweets(username):
 
         tweets = []
         for tweet in response.data:
-            json_to_string = json.dumps(tweet.text)
-            tweets.append(json_to_string)
+            tweets.append(tweet.get("text"))
         return tweets
     except tweepy.TooManyRequests as e:
         logging.exception(e)

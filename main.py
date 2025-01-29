@@ -6,6 +6,7 @@ import viz_berlin
 import datetime, pytz
 from googletrans import Translator
 import logging
+import re
 
 
 logging.basicConfig(
@@ -25,10 +26,10 @@ def translate(texts):
         logging.exception(e)
 
 
-# async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-#     await context.job_queue.run_daily(tweets,
-#                                       datetime.time(hour=8, minute=00, tzinfo=pytz.timezone('Europe/Berlin')),
-#                                       data=update.message.chat_id)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await context.job_queue.run_daily(tweets,
+                                      datetime.time(hour=22, minute=00, tzinfo=pytz.timezone('Europe/Berlin')),
+                                      data=update.message.chat_id)
 
 
 async def website_with_news(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -37,7 +38,15 @@ async def website_with_news(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         english_news = translate(latest_news)
         for obj in english_news:
             text = obj.text
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+            modified_text = re.sub(r"\n\n\n\n", r"\n", text)
+            while len(modified_text) >= 4096:
+                split_pos = modified_text.rfind(" ", 0, 4096)  # find space before 4096 symbol
+                if split_pos == -1:  # the space didn't find
+                    split_pos = 4096
+                part = modified_text[:split_pos]
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=part)
+                modified_text = modified_text[split_pos:].lstrip()
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=modified_text)
     except Exception as e:
         logging.exception(e)
 
