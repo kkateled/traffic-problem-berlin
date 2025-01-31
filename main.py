@@ -1,4 +1,4 @@
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackContext
 from telegram import Update
 import os
 import twitter
@@ -27,12 +27,10 @@ def translate(texts):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await context.job_queue.run_daily(tweets,
-                                      datetime.time(hour=22, minute=00, tzinfo=pytz.timezone('Europe/Berlin')),
-                                      data=update.message.chat_id)
+    await update.message.reply_text('Hello! This is Berlin traffic news. Every day we show the latest news about traffic in Berlin.')
 
 
-async def website_with_news(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def news(context: CallbackContext) -> None:
     try:
         latest_news = viz_berlin.get_latest_news()
         english_news = translate(latest_news)
@@ -44,9 +42,9 @@ async def website_with_news(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 if split_pos == -1:  # the space didn't find
                     split_pos = 4096
                 part = modified_text[:split_pos]
-                await context.bot.send_message(chat_id=update.effective_chat.id, text=part)
+                await context.bot.send_message(chat_id=context.job.chat_id, text=part)
                 modified_text = modified_text[split_pos:].lstrip()
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=modified_text)
+            await context.bot.send_message(chat_id=context.job.chat_id, text=modified_text)
     except Exception as e:
         logging.exception(e)
 
@@ -67,11 +65,15 @@ async def tweets(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 def main():
     application = ApplicationBuilder().token(os.getenv('TOKEN_TELEGRAM')).build()
-    tweets_handler = CommandHandler('tweets', tweets)
-    application.add_handler(tweets_handler)
-    news_handler = CommandHandler('news', website_with_news)
-    application.add_handler(news_handler)
-    application.run_polling()
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('tweets', tweets))
+
+    job_queue = application.job_queue
+    job_queue.run_daily(news,
+                        datetime.time(hour=22, minute=00, tzinfo=pytz.timezone('Europe/Berlin')),
+                        name= "news")
+
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == '__main__':
