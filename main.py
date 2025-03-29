@@ -1,5 +1,6 @@
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackContext, MessageHandler, filters
 from telegram import Update
+from dotenv import load_dotenv
 import os
 import twitter
 import viz_berlin
@@ -11,6 +12,7 @@ import re
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
+load_dotenv()
 
 
 def error(update, context):
