@@ -33,7 +33,7 @@ async def translate(texts):
 
 async def start(update: Update, context: CallbackContext) -> None:
     greetings = 'Hello! This is Berlin traffic news. Every day we show the latest news about traffic in Berlin.'
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=greetings)
+    await context.bot.send_message(chat_id=os.getenv('CHANNEL_ID'), text=greetings)
 
 
 async def news(context: CallbackContext) -> None:
@@ -60,7 +60,7 @@ async def set_timer(update: Update, context: CallbackContext) -> None:
     context.job_queue.run_daily(
             news,
             datetime.time(hour=22, minute=00, tzinfo=pytz.timezone('Europe/Berlin')),
-            chat_id=update.effective_chat.id,
+            chat_id=os.getenv('CHANNEL_ID'),
             name="timer_news")
 
 
@@ -68,12 +68,12 @@ async def tweets(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         latest_tweets = twitter.get_latest_tweets(username="VIZ_Berlin")
         if isinstance(latest_tweets, str):
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=latest_tweets)
+            await context.bot.send_message(chat_id=os.getenv('CHANNEL_ID'), text=latest_tweets, timeout=600)
         else:
             english_tweets = await translate(latest_tweets)
             for tweet in english_tweets:
                 text = tweet.text
-                await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+                await context.bot.send_message(chat_id=os.getenv('CHANNEL_ID'), text=text, timeout=600)
     except Exception as e:
         logging.exception(e)
 
